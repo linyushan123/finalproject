@@ -1,0 +1,116 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Gmail API demo</title>
+    <meta charset="UTF-8">
+    <link rel="shortcut icon" href="about:blank">
+  </head>
+  <body>
+    <div>
+      <h1>Gmail API demo</h1>
+      <div id="send-div" style="display:none;">
+      	<label for="inputName"><strong>Name</strong></label>
+      	<input type="text" id="inputName" placeholder="Enter Name">
+      	<label for="inputEmail" ><strong>Email</strong></label>
+    	<input type="email" id="inputEmail" placeholder="Enter email">
+      	<label for="inputText"><strong>Text</strong></label>
+    	<textarea id="inputText" rows="3"></textarea>
+      	<button id="send-button" onclick="sendEmail();">Send</button>
+      </div>
+      <h2 id="warning-text" style="color:red;">尚未授權，請先執行授權頁面</h2>
+    </div>
+
+	<script type="text/javascript">
+		var CLIENT_ID = '114127625131-lqjgo304qi63fpk3qf60tfjpnpknjm4k.apps.googleusercontent.com';
+		var API_KEY = 'ae9B61MnJBO-v4Bb_bo2kbiW';
+		var SCOPES = 'https://www.googleapis.com/auth/gmail.send';
+	
+		
+		function handleClientLoad() {
+  			gapi.client.setApiKey(API_KEY);
+  			window.setTimeout(checkAuth, 10);
+ 		}
+
+ 		
+ 		function checkAuth() {
+   			gapi.auth.authorize({
+     			client_id: CLIENT_ID,
+     			scope: SCOPES,
+     			immediate: true
+   			}, handleAuthResult);
+   		}
+
+   		
+   		function handleAuthResult(authResult) {	
+			if(authResult && !authResult.error) {
+	  			loadGmailApi();
+			}
+			else{
+	  			document.getElementById("warning-text").style.display = "";
+	  			document.getElementById("send-div").style.display = "none";
+			}	
+		}
+
+		
+		function loadGmailApi() {
+			gapi.client.load('gmail', 'v1',displayMail); //執行後呼叫 displayMail
+		}
+
+		
+		function displayMail(){
+			document.getElementById("warning-text").style.display = "none";
+	  		document.getElementById("send-div").style.display = "";
+		}
+
+		function sendEmail(){  
+  			document.getElementById("send-button").disabled = true;//disable button
+  
+  			var content = "Name:"+"\r\n"+document.getElementById('inputName').value + "\r\n"+
+  						  "Email:"+"\r\n"+document.getElementById('inputEmail').value + "\r\n"+
+  						  "Message:"+"\r\n" + document.getElementById('inputText').value;
+
+  			sendMessage(
+	  		{
+	    		'To': document.getElementById('inputEmail').value,
+	    		'From': 'me',
+	    		'Subject':  document.getElementById('inputText').value
+	  		},
+	  		content,
+	  		reloadpage
+			);
+
+			return false;
+		}
+
+		function reloadpage(){
+			alert('Send OK');
+			location.reload();
+		}
+
+		
+		function sendMessage(headers_obj, message, callback)
+		{
+  			
+  			var email = '';
+  			for(var header in headers_obj)
+    			email += header += ": "+headers_obj[header]+"\r\n";
+  			email += "\r\n" + message;
+
+  			
+  			var base64EncodedEmail = btoa(unescape(encodeURIComponent(email)));
+           
+  			var request = gapi.client.gmail.users.messages.send({
+				'userId': 'me',
+				'resource': {
+ 				'raw': base64EncodedEmail
+				}
+   			});
+	
+   			return request.execute(callback);
+		}
+	</script>
+	
+	<script src="https://apis.google.com/js/client.js?onload=handleClientLoad"></script>
+
+  </body>
+</html>
